@@ -7,17 +7,6 @@ PGID="${PGID:-1000}"
 CONFIG_DIR="${DISCOGSTAGGER_CONFIG_DIR:-/config}"
 CONFIG_FILE="${CONFIG_DIR}/config.yaml"
 
-# ── Populate /config ─────────────────────────────────────────────────────────
-#
-# samples/ is refreshed on every start so it always documents the version
-# actually installed -- the right thing to diff against after an upgrade.
-# Nothing outside samples/ is written, so an edited config is never lost.
-seed_config() {
-    mkdir -p "${CONFIG_DIR}/samples"
-    [ -d /defaults ] && cp -rf /defaults/. "${CONFIG_DIR}/samples/"
-    return 0
-}
-
 # ── Refuse to run without a config the operator has reviewed ─────────────────
 #
 # Seeding happens first, so by the time this prints, the files it names exist.
@@ -40,11 +29,12 @@ require_config() {
 
 No configuration found at ${CONFIG_FILE}
 
-  ${CONFIG_DIR}/samples/ has just been populated with a reference copy of
-  every configurable file. To get started:
+  Create one:
 
-    cp ${CONFIG_DIR}/samples/config.yaml  ${CONFIG_DIR}/config.yaml
-    cp ${CONFIG_DIR}/samples/formats.ini  ${CONFIG_DIR}/formats.ini
+    docker compose run --rm dt3 --new-config
+
+  That writes config.yaml and formats.ini here, from the reference configs
+  inside the package itself. It never overwrites anything you have edited.
 
   Then edit ${CONFIG_DIR}/config.yaml. Nothing in it needs to name another
   file: formats.ini is found because it sits beside it. Set common.source_dir
@@ -68,8 +58,6 @@ if [ "$(id -u)" = "0" ]; then
         && usermod -o -u "$PUID" -g "$PGID" dt3 \
         || useradd -o -u "$PUID" -g "$PGID" -M -d /app -s /usr/sbin/nologin dt3
 
-    seed_config
-
     # Not /incoming or /sorted: the container writes there, but a recursive
     # chown across a music library would be slow and is not this container's
     # decision to make.
@@ -83,7 +71,5 @@ if [ "$(id -u)" = "0" ]; then
     wants_info_only "$@" || require_config
     exec gosu dt3 "$@"
 fi
-
-seed_config
 wants_info_only "$@" || require_config
 exec "$@"

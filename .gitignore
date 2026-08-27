@@ -4,7 +4,3 @@
 # config/README.md; only that README is tracked.
 config/config.yaml
 config/formats.ini
-
-# Refreshed from the image on every container start.
-config/samples/*
-!config/samples/README.md

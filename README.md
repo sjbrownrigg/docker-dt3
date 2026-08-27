@@ -12,18 +12,15 @@ being versioned alongside the source, and it changes on a different rhythm.
 ```bash
 cp .env.example .env          # then set DISCOGS_USER_TOKEN
 ./build.sh
-docker compose run --rm dt3   # populates config/samples/, then stops
+docker compose run --rm dt3 --new-config
 ```
 
-The first run refuses to do anything, on purpose: it seeds `config/samples/`
-with a reference copy of every configurable file and tells you what to copy.
-Tagging renames and moves files, so it will not run against settings you have
+That writes `config.yaml` and `formats.ini` into `config/`, from the reference
+configs inside the package itself. It never overwrites anything you have edited.
+
+Running without a configuration refuses rather than falling back to defaults:
+tagging renames and moves files, so it will not run against settings you have
 not reviewed.
-
-```bash
-cp config/samples/config.yaml config/config.yaml
-cp config/samples/formats.ini config/formats.ini
-```
 
 Set `common.source_dir` to `/incoming` and `common.dest_dir` to `/sorted`, then:
 

@@ -29,20 +29,14 @@ WORKDIR /app
 COPY . /src/dt3
 RUN pip install --no-cache-dir /src/dt3
 
-# Reference copies of the files a user owns, staged read-only in the image.
-# The entrypoint refreshes /config/samples/ from here on every start, so what a
-# mounted volume documents always matches the version installed.
+# No sample files are staged here on purpose.
 #
-# Nothing here is loaded at run time -- defaults come from the schema table in
-# discogstagger/config_schema.py. They are named for where they are meant to be
-# copied to, so the command a user runs is an obvious one.
+# discogstagger3 ships its reference configs inside the package, and
+# `--new-config` writes from those. Staging copies in the image made the
+# deployment a second source of truth for something the package already owns,
+# and the two could drift.
 #
-# Templates and the rule tables are deliberately absent: they belong to
-# discogstagger3 and ship inside the package.
-RUN set -eux; \
-    mkdir -p /defaults; \
-    cp /src/dt3/discogstagger/conf/config_sample.yaml  /defaults/config.yaml; \
-    cp /src/dt3/discogstagger/conf/formats_sample.ini  /defaults/formats.ini
+#   docker compose run --rm dt3 --new-config
 
 # Configuration is a directory, which is why there is no -c switch.
 ENV DISCOGSTAGGER_CONFIG_DIR=/config

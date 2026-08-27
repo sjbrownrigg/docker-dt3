@@ -6,9 +6,12 @@ container at `/config`.
 ```
 config.yaml    settings
 formats.ini    file and directory naming
-samples/       reference copies, refreshed from the image on every start.
-               Never edited, never loaded — copy out of here.
 ```
+
+Create it with `docker compose run --rm dt3 --new-config`, which writes these
+from the reference configs inside the package itself. There is no `samples/`
+directory: discogstagger3 owns the reference copies, and the deployment does
+not keep a second set that could drift.
 
 That is the whole list: this directory holds what *you* own. Mako templates for
 `.nfo`/`.m3u` and the tagging rule tables belong to discogstagger3, ship inside
