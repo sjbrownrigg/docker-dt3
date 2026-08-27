@@ -1,0 +1,65 @@
+name: discogstagger3
+
+services:
+  dt3:
+    build:
+      context: ../discogstagger3
+      dockerfile: ../docker-dt3/Dockerfile
+      additional_contexts:
+        # This directory, for the entrypoint script -- it belongs to the
+        # deployment, not to the source repo.
+        deploy: .
+      args:
+        DT3_REF: ${DT3_REF:-unknown}
+    image: discogstagger3:local
+    container_name: dt3
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-Europe/London}
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      # Credentials via the environment, not written into the conf file.
+      # This overrides discogs.user_token in the config.
+      DISCOGS_USER_TOKEN: ${DISCOGS_USER_TOKEN:?set DISCOGS_USER_TOKEN in .env}
+    volumes:
+      # incoming and sorted are mounted as separate roots rather than the
+      # library root, so the container cannot see -- let alone rewrite -- the
+      # rest of the collection. Both must be writable: discogstagger3 writes
+      # the done marker into the source directory and the tagged copy into
+      # the destination.
+      - incoming:/incoming
+      - sorted:/sorted
+      - ./config:/config
+      # Discogs responses, the OAuth token and the log. Local: derived data,
+      # rebuilt from API calls -- which are rate limited, so worth keeping.
+      - cache:/cache
+    networks:
+      - mozarr-net
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+networks:
+  mozarr-net:
+    name: mozarr-net
+    external: true
+
+volumes:
+  incoming:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: addr=${NAS_ADDR:-192.168.1.240},nfsvers=4,rw,hard,intr,timeo=600
+      device: :/volume1/Music/incoming
+
+  sorted:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: addr=${NAS_ADDR:-192.168.1.240},nfsvers=4,rw,hard,intr,timeo=600
+      device: :/volume1/Music/sorted
+
+  cache:
+    driver: local
