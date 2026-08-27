@@ -64,8 +64,8 @@ See [config/README.md](config/README.md) for the full layout.
 
 ## Moving to another host
 
-This deployment is not self-contained. Four things need doing on a new host,
-and the first fails *silently* if you miss it.
+Three things need doing on a new host, and the first fails *silently* if you
+miss it.
 
 **1. Remove `COMPOSE_FILE` from `.env`.** It is a WSL2 workaround. Carrying it
 to a Linux host forces the bind-mount override, whose paths will not exist
@@ -75,14 +75,16 @@ reporting itself healthy. `compose.wsl.yaml` now sets `create_host_path: false`
 so this errors at startup instead, but deleting the line is the actual fix. On
 Linux you want the NFS volumes in `compose.yaml`.
 
-**2. Clone the source repo alongside it.** The image is built from
-`../discogstagger3`, not pulled:
+**2. Nothing else to clone.** The image is built from a pinned git ref, so this
+repo stands on its own:
 
 ```bash
-git clone https://github.com/sjbrownrigg/discogstagger3.git
 git clone https://github.com/sjbrownrigg/docker-dt3.git
 cd docker-dt3 && ./build.sh
 ```
+
+Set `DT3_REF` to build a different branch, tag or SHA — it has to be pushed,
+since pip fetches it.
 
 **3. Create the shared network**, which is external and owned by no stack:
 

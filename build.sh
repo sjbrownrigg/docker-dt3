@@ -1,18 +1,30 @@
 #!/usr/bin/env bash
 #
-# Build discogstagger3 from the local checkout, stamping the SHA into the
-# image so what went in is recoverable later.
+# Build the discogstagger3 image.
+#
+#   ./build.sh                      # the ref in .env, or the Dockerfile default
+#   DT3_REF=some-branch ./build.sh  # a branch, tag or SHA
+#
+# discogstagger3 is installed from a git ref rather than a local checkout, so
+# this repo builds on its own -- nothing needs cloning alongside it. The ref
+# must be pushed, since pip fetches it.
 
 set -euo pipefail
 cd "$(dirname "$0")"
 
-DT3_SRC="${DT3_SRC:-../discogstagger3}"
-
-if [[ -n "$(git -C "$DT3_SRC" status --porcelain)" ]]; then
-    echo "warning: ${DT3_SRC} has uncommitted changes; the image will include them." >&2
+# A sibling checkout is not required, but if one is here it is worth saying
+# whether what you are about to build matches it -- the usual surprise is
+# building a tag while iterating on unpushed commits next door.
+SRC="${DT3_SRC:-../discogstagger3}"
+if [[ -d "$SRC/.git" ]]; then
+    local_head="$(git -C "$SRC" rev-parse --short HEAD)"
+    if [[ -n "$(git -C "$SRC" status --porcelain)" ]]; then
+        echo "note: ${SRC} has uncommitted changes at ${local_head}." >&2
+        echo "      They will NOT be in this image -- it builds from a pushed ref." >&2
+    fi
+    if ! git -C "$SRC" branch -r --contains HEAD >/dev/null 2>&1; then
+        echo "note: ${SRC} HEAD (${local_head}) does not appear to be pushed." >&2
+    fi
 fi
 
-DT3_REF="$(git -C "$DT3_SRC" rev-parse HEAD)"
-echo "discogstagger3  ${DT3_REF:0:7}  ($(git -C "$DT3_SRC" describe --tags --always))"
-
-exec docker compose build --build-arg DT3_REF="$DT3_REF" "$@"
+exec docker compose build "$@"
