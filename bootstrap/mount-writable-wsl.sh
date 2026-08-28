@@ -50,14 +50,16 @@ mount_rw() {
         -o "rw,uid=${TARGET_UID},gid=${TARGET_GID},metadata"
 }
 
+# Default to every root compose.wsl.yaml mounts. Getting this list wrong is
+# silent in a specific way: an unmounted path leaves an empty directory that a
+# container will happily start against and find nothing to do.
+if [[ $# -eq 0 ]]; then
+    set -- incoming sorted
+fi
+
 for subdir in "$@"; do
     mount_rw "$subdir"
 done
-
-if [[ $# -eq 0 ]]; then
-    mount_rw incoming
-    mount_rw sorted
-fi
 
 echo
 echo "Verifying:"
