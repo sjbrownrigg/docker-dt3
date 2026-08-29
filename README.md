@@ -7,6 +7,27 @@ thing from the tool it deploys. It carries host-specific decisions — NAS
 addresses, UID/GID, which directories are mounted where — that have no business
 being versioned alongside the source, and it changes on a different rhythm.
 
+---
+
+> ## ⚠ Breaking changes in discogstagger3 4.0.0 — read before upgrading
+>
+> **The configuration is a directory, not a file, and `-c` is gone.** The
+> container mounts it at `/config`, so this is already how compose.yaml is
+> set up — but a deployment carrying a hand-rolled command line with `-c`
+> will stop working.
+>
+> **A missing configuration is an error.** A wrong path used to fall back to
+> the bundled sample, so the container appeared healthy while tagging against
+> settings nobody had seen. It now refuses to start.
+>
+> Section names are unchanged: a 3.x `config.yaml` keeps working once it is
+> in the mounted directory.
+>
+> Full detail:
+> [discogstagger3 docs/HISTORY.md](https://github.com/sjbrownrigg/discogstagger3/blob/master/docs/HISTORY.md).
+
+---
+
 ## Quick start
 
 ```bash
